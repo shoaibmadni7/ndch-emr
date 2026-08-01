@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0b6b5e" />
+<link rel="manifest" href="manifest.webmanifest" />
+<title>Navodaya Dental College &amp; Hospital — Digital Case Record</title>
+<style>
+  :root{
+    --brand:#0b6b5e; --brand-d:#084f45; --brand-l:#e6f4f1; --accent:#c8781f;
+    --bg:#f4f6f8; --card:#ffffff; --line:#dde3e8; --text:#1f2a30; --muted:#647079;
+    --danger:#c0392b; --ok:#1e8e3e; --warn:#c8781f;
+    --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.45}
+  h1,h2,h3,h4{margin:0 0 .4em}
+  button{font:inherit;cursor:pointer}
+  input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--text)}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--brand-l);border-color:var(--brand)}
+  textarea{resize:vertical;min-height:56px}
+  label.fld{display:block;margin-bottom:10px;font-size:12.5px;color:var(--muted);font-weight:600}
+  label.fld span{display:block;margin-bottom:3px}
+  .btn{background:var(--brand);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-weight:600}
+  .btn:hover{background:var(--brand-d)}
+  .btn.sec{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+  .btn.sec:hover{background:var(--brand-l)}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .btn.ghost:hover{background:#eef1f3}
+  .btn.danger{background:var(--danger)}
+  .btn.sm{padding:5px 10px;font-size:12.5px}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .row>*{flex:1;min-width:180px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+  .hide{display:none!important}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.02em}
+  .muted{color:var(--muted)}
+  .tag-student{background:#eef1f3;color:#455}.tag-intern{background:#e8f0fe;color:#1a56b8}
+  .tag-doctor{background:#e6f4ea;color:#1e7a34}.tag-professor{background:#f3e8fd;color:#7a1fb0}
+
+  /* Login */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--brand),var(--brand-d));padding:20px}
+  #login .box{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-width:420px;padding:34px}
+  #login .logo{width:54px;height:54px;border-radius:12px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:24px;margin-bottom:14px}
+  .demo-users{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+  .demo-users button{display:flex;justify-content:space-between;align-items:center;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:7px;text-align:left}
+  .demo-users button:hover{border-color:var(--brand);background:var(--brand-l)}
+
+  /* App shell */
+  header.top{background:var(--brand);color:#fff;padding:0 18px;display:flex;align-items:center;gap:14px;height:56px;position:sticky;top:0;z-index:50}
+  header.top .logo{width:34px;height:34px;border-radius:8px;background:#fff;color:var(--brand);display:flex;align-items:center;justify-content:center;font-weight:800}
+  header.top h1{font-size:15px;margin:0;font-weight:700;line-height:1.1}
+  header.top .sub{font-size:11px;opacity:.85}
+  header.top nav{margin-left:auto;display:flex;gap:6px;align-items:center}
+  header.top nav button{background:rgba(255,255,255,.12);color:#fff;border:none;padding:7px 13px;border-radius:7px;font-weight:600}
+  header.top nav button.active{background:#fff;color:var(--brand)}
+  header.top nav button:hover{background:rgba(255,255,255,.25)}
+  .whoami{display:flex;align-items:center;gap:8px;font-size:12.5px;background:rgba(0,0,0,.12);padding:5px 10px;border-radius:20px}
+  main{max-width:1120px;margin:18px auto;padding:0 18px}
+  .view{display:none}.view.active{display:block}
+
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);font-size:13px}
+  th{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+  tr.clickable:hover{background:var(--brand-l);cursor:pointer}
+
+  .tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:2px solid var(--line);margin-bottom:16px}
+  .tabs button{background:transparent;border:none;padding:10px 14px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
+  .tabs button.active{color:var(--brand);border-bottom-color:var(--brand)}
+  .sec-title{font-size:13px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--line)}
+  .chk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+  .chk{display:flex;align-items:center;gap:7px;background:#fafbfc;border:1px solid var(--line);border-radius:7px;padding:6px 9px}
+  .chk input{width:auto}
+
+  /* Odontogram */
+  .odo-wrap{overflow-x:auto;padding:8px 0}
+  .odo{display:inline-block;min-width:640px}
+  .odo .quad-row{display:flex;justify-content:center;gap:2px;margin-bottom:2px}
+  .tooth{width:34px;text-align:center;font-size:10px}
+  .tooth .num{color:var(--muted);margin-bottom:2px}
+  .tooth .box{height:34px;border:1px solid #b9c4cc;border-radius:5px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;background:#fff;cursor:pointer;transition:.1s}
+  .tooth .box:hover{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-l)}
+  .midline{border-left:2px solid var(--line);margin:0 4px}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:11.5px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #b9c4cc}
+
+  .visit{border:1px solid var(--line);border-radius:9px;padding:12px;margin-bottom:10px;background:#fafbfc}
+  .visit .meta{font-size:11.5px;color:var(--muted);margin-top:6px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:11px 20px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.3);z-index:200;opacity:0;transition:.3s}
+  .toast.show{opacity:1}
+  .bilingual{background:var(--brand-l);border:1px solid #bfe0da;border-radius:9px;padding:14px;font-size:13px}
+  .audit{font-size:11.5px;color:var(--muted);background:#fafbfc;border:1px dashed var(--line);border-radius:8px;padding:10px;margin-top:8px}
+  @media print{
+    header.top,.tabs,.no-print{display:none!important}
+    main{margin:0;max-width:100%}
+    .card{box-shadow:none;border:none;page-break-inside:avoid}
+    .view{display:block!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="login">
+  <div class="box">
+    <div class="logo">N</div>
+    <h2 style="margin-bottom:2px">Digital Case Record</h2>
+    <p class="muted" style="margin-top:0">Navodaya Dental College &amp; Hospital, Raichur</p>
+    <label class="fld"><span>Username</span><input id="lg-user" placeholder="e.g. umer" autocomplete="username"/></label>
+    <label class="fld"><span>Password</span><input id="lg-pass" type="password" placeholder="password" autocomplete="current-password"/></label>
+    <button class="btn" style="width:100%" onclick="doLogin()">Sign in</button>
+    <div id="lg-err" class="muted" style="color:var(--danger);margin-top:8px;font-size:12.5px"></div>
+    <div class="demo-users">
+      <p class="muted" style="font-size:11.5px;margin:0 0 8px">Demo accounts — click to sign in</p>
+      <div id="demo-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hide">
+  <header class="top">
+    <div class="logo">N</div>
+    <div>
+      <h1>Navodaya Dental College &amp; Hospital</h1>
+      <div class="sub">Digital Patient Case Record System</div>
+    </div>
+    <nav>
+      <button data-nav="patients" class="active" onclick="nav('patients')">Patients</button>
+      <button data-nav="new" onclick="newPatient()">+ New Patient</button>
+      <button data-nav="admin" id="nav-admin" class="hide" onclick="nav('admin')">Admin</button>
+      <span class="whoami"><span id="who-name"></span><span id="who-role" class="pill"></span>
+        <button class="btn ghost sm" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="logout()">Logout</button></span>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Patients list -->
+    <section id="v-patients" class="view active">
+      <div class="card">
+        <div class="row" style="align-items:flex-end">
+          <label class="fld" style="flex:2"><span>Search patients (name, UHID, OPD no., mobile)</span>
+            <input id="search" oninput="renderPatients()" placeholder="Type to search…"/></label>
+          <div style="flex:0"><button class="btn" onclick="newPatient()">+ Register New Patient</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:12px">Patient Records <span id="pt-count" class="muted" style="font-weight:400"></span></h3>
+        <table>
+          <thead><tr><th>UHID / OPD</th><th>Name</th><th>Age/Sex</th><th>Chief Complaint</th><th>Last Updated</th><th>Status</th></tr></thead>
+          <tbody id="pt-body"></tbody>
+        </table>
+        <p id="pt-empty" class="muted hide" style="text-align:center;padding:26px">No patient records yet. Click “Register New Patient” to begin.</p>
+      </div>
+    </section>
+
+    <!-- Case sheet editor -->
+    <section id="v-case" class="view">
+      <div class="card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <button class="btn ghost sm no-print" onclick="nav('patients')">&larr; Back</button>
+        <div style="flex:1">
+          <h3 style="margin:0" id="cs-title">New Case Sheet</h3>
+          <div class="muted" id="cs-sub" style="font-size:12.5px"></div>
+        </div>
+        <button class="btn sec sm no-print" onclick="window.print()">🖨 Print / PDF</button>
+        <button class="btn sm no-print" onclick="saveCase()">💾 Save Record</button>
+      </div>
+
+      <div class="tabs no-print" id="cs-tabs"></div>
+      <form id="cs-form">
+        <!-- 1. Registration -->
+        <div class="cs-tab" data-tab="reg">
+          <div class="card">
+            <div class="sec-title">I. Patient Registration &amp; Bio-Data</div>
+            <div class="row">
+              <label class="fld"><span>UHID</span><input name="uhid" placeholder="NDCH…"/></label>
+              <label class="fld"><span>OPD No.</span><input name="opd"/></label>
+              <label class="fld"><span>Date</span><input name="date" type="date"/></label>
+            </div>
+            <div class="row">
+              <label class="fld" style="flex:2"><span>Patient Name *</span><input name="name" required/></label>
+              <label class="fld"><span>Age</span><input name="age" type="number" min="0"/></label>
+              <label class="fld"><span>Sex</span><select name="sex"><option value="">—</option><option>Male</option><option>Female</option><option>Other</option></select></label>
+            </div>
+            <div class="row">
+              <label class="fld"><span>Date of Birth</span><input name="dob" type="date"/></label>
+              <label class="fld"><span>Occupation</span><input name="occupation"/></label>
+              <label class="fld"><span>Telephone / Mobile</span><input name="mobile"/></label>
+            </div>
+            <label class="fld"><span>Address</span><textarea name="address"></textarea></label>
+            <div class="row">
+              <label class="fld"><span>Consultant / Dept.</span><input name="consultant" placeholder="e.g. OMR"/></label>
+              <label class="fld"><span>Bill No.</span><input name="billno"/></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. History -->
+        <div class="cs-tab hide" data-tab="hist">
+          <div class="card">
+            <div class="sec-title">II. Chief Complaint</div>
+            <label class="fld"><span>Chief Complaint (in patient's own words)</span><textarea name="cc"></textarea></label>
+            <div class="sec-title">III. History of Present Illness</div>
+            <label class="fld"><span>Duration, mode of onset, progress, related signs &amp; symptoms, treatment history</span><textarea name="hpi" style="min-height:90px"></textarea></label>
+            <div class="sec-title">IV. Past Dental History</div>
+            <label class="fld"><span>Previous dental treatment, visits, RCT, extractions, etc.</span><textarea name="pastdental"></textarea></label>
+          </div>
+          <div class="card">
+            <div class="sec-title">V. Medical History</div>
+            <div class="chk-grid" id="medhx"></div>
+            <label class="fld" style="margin-top:10px"><span>Other / Notes (drugs &amp; medications, details)</span><textarea name="medhx_notes"></textarea></label>
+          </div>
+          <div class="card">
+            <div class="sec-title">VI. Family History &amp; VII. Personal History</div>
+            <label class="fld"><span>Family History</span><textarea name="familyhx"></textarea></label>
+            <div class="row">
+              <label class="fld"><span>Diet</span><select name="diet"><option value="">—</option><option>Vegetarian</option><option>Mixed</option></select></label>
+              <label class="fld"><span>Habits (tobacco, smoking, alcohol, etc.)</span><input name="habits"/></label>
+              <label class="fld"><span>Oral Hygiene Programme</span><input name="ohp" placeholder="brushing frequency, aids"/></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Examination -->
+        <div class="cs-tab hide" data-tab="exam">
+          <div class="card">
+            <div class="sec-title">VIII. General Examination</div>
+            <div class="row">
+              <label class="fld"><span>Built / Gait / Nourishment</span><input name="built"/></label>
+              <label class="fld"><span>Temperature (°F)</span><input name="temp"/></label>
+              <label class="fld"><span>Pulse (/min)</span><input name="pulse"/></label>
+            </div>
+            <div class="row">
+              <label class="fld"><span>Blood Pressure (mmHg)</span><input name="bp" placeholder="e.g. 120/80"/></label>
+              <label class="fld"><span>Respiratory Rate</span><input name="rr"/></label>
+              <label class="fld"><span>Pallor / Icterus / Cyanosis / Edema</span><input name="skin"/></label>
+            </div>
+            <label class="fld"><span>Examination of Face / TM Joint / Lymph Nodes</span><textarea name="face"></textarea></label>
+          </div>
+
+          <div class="card">
+            <div class="sec-title">IX(1). Hard Tissue Examination — Odontogram (FDI)</div>
+            <p class="muted no-print" style="margin-top:0;font-size:12px">Click a tooth to cycle its status. Permanent (top) &amp; primary (bottom) dentition.</p>
+            <div class="odo-wrap"><div id="odo" class="odo"></div></div>
+            <div class="legend" id="odo-legend"></div>
+            <div class="row" style="margin-top:12px">
+              <label class="fld"><span>Wasting diseases / Occlusion / Deposits</span><input name="hard_notes"/></label>
+              <label class="fld"><span>Mobility (tender / non-tender)</span><input name="mobility"/></label>
+            </div>
+            <label class="fld"><span>Other findings (fractured, colour, dislodgement, etc.)</span><textarea name="hard_other"></textarea></label>
+          </div>
+
+          <div class="card">
+            <div class="sec-title">IX(2). Soft Tissue &amp; Saliva</div>
+            <div class="row">
+              <label class="fld"><span>Gingiva (marginal / attached / papillary)</span><input name="gingiva"/></label>
+              <label class="fld"><span>Periodontal Health (pockets, etc.)</span><input name="perio"/></label>
+            </div>
+            <div class="row">
+              <label class="fld"><span>Buccal Mucosa</span><input name="buccal"/></label>
+              <label class="fld"><span>Floor of Mouth / Vestibule</span><input name="floor"/></label>
+              <label class="fld"><span>Tongue / Lips / Palate / Tonsils</span><input name="tongue"/></label>
+            </div>
+            <div class="row">
+              <label class="fld"><span>Saliva — Viscosity</span><input name="sal_visc"/></label>
+              <label class="fld"><span>Saliva — Flow</span><input name="sal_flow"/></label>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="sec-title">X–XI. Examination of Lesion</div>
+            <label class="fld"><span>Inspection (site, size, shape, number, margins, surface)</span><textarea name="insp"></textarea></label>
+            <label class="fld"><span>Palpation (temperature, tenderness, consistency, fluctuation, discharge)</span><textarea name="palp"></textarea></label>
+            <label class="fld"><span>Percussion / Summary</span><textarea name="perc"></textarea></label>
+          </div>
+        </div>
+
+        <!-- 4. Diagnosis & Plan -->
+        <div class="cs-tab hide" data-tab="dx">
+          <div class="card">
+            <div class="sec-title">XII–XV. Diagnosis</div>
+            <label class="fld"><span>Provisional Diagnosis</span><textarea name="provdx"></textarea></label>
+            <label class="fld"><span>Differential Diagnosis</span><textarea name="diffdx"></textarea></label>
+            <div class="sec-title">XIV. Investigation</div>
+            <div class="row">
+              <label class="fld"><span>Chair Side</span><input name="inv_chair"/></label>
+              <label class="fld"><span>Radiological (RVG, OPG, etc.)</span><input name="inv_radio"/></label>
+              <label class="fld"><span>Laboratory</span><input name="inv_lab"/></label>
+            </div>
+            <label class="fld"><span>Final Diagnosis</span><textarea name="finaldx"></textarea></label>
+          </div>
+          <div class="card">
+            <div class="sec-title">XVI. Treatment Planning</div>
+            <label class="fld"><span>Treatment Plan</span><textarea name="txplan" style="min-height:80px"></textarea></label>
+          </div>
+          <div class="card">
+            <div class="sec-title">XVII. Inter-Departmental Referral</div>
+            <p class="muted" style="margin-top:0;font-size:12px">Select departments the patient is referred to.</p>
+            <div class="chk-grid" id="refer"></div>
+            <label class="fld" style="margin-top:10px"><span>Referral Notes</span><input name="refer_notes"/></label>
+          </div>
+        </div>
+
+        <!-- 5. Treatment notes -->
+        <div class="cs-tab hide" data-tab="tx">
+          <div class="card">
+            <div class="sec-title">Treatment Notes (Multi-Visit Log)</div>
+            <div id="visits"></div>
+            <div class="no-print" style="border-top:1px dashed var(--line);padding-top:12px;margin-top:6px">
+              <h4 style="margin-bottom:8px">Add Treatment Note</h4>
+              <div class="row">
+                <label class="fld"><span>Department</span><select id="nv-dept"></select></label>
+                <label class="fld"><span>Date</span><input id="nv-date" type="date"/></label>
+              </div>
+              <label class="fld"><span>Treatment Notes</span><textarea id="nv-notes"></textarea></label>
+              <button type="button" class="btn sm" onclick="addVisit()">+ Add Note (signed by you)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Consent -->
+        <div class="cs-tab hide" data-tab="consent">
+          <div class="card">
+            <div class="sec-title">Consent Form / ಒಪ್ಪಿಗೆ ನಮೂನೆ</div>
+            <div class="bilingual">
+              <p style="margin-top:0"><b>ಒಪ್ಪಿಗೆ ನಮೂನೆ (ರೋಗಿಯಿಂದ ಅಥವಾ ಪ್ರತಿನಿಧಿಯಿಂದ ತುಂಬಿಸಬೇಕು):</b> ನಾನು ಸಂಕೋಚವಿಲ್ಲದೇ ಮತ್ತು ನನ್ನ ಪೂರ್ಣ ಜ್ಞಾನದಿಂದ ದೈಹಿಕ ರೋಗ ವಿಧಾನ ಪರೀಕ್ಷೆ, ರಕ್ತ ಸಂಯೋಜನೆಗೆ ಶಸ್ತ್ರಚಿಕಿತ್ಸೆಗೆ ಅಥವಾ ಇತರ ನಿಶ್ಚಿತಗೊಳಿಸುವ ಚಿಕಿತ್ಸೆಗೆ ಸಂಪೂರ್ಣ ಸಮ್ಮತಿ ಕೊಡುವೆನು.</p>
+              <p style="margin-bottom:0"><b>English:</b> I, in my full senses, give my complete consent for my diagnostic examination, biopsy, transfusion or operation under any type of anaesthesia, and agree that no responsibility will be attached to the surgeon or hospital staff, and that the risk has been explained to me in my own language.</p>
+            </div>
+            <div class="row" style="margin-top:14px">
+              <label class="fld"><span>Consent given by</span><input name="consent_by" placeholder="Patient / Representative name"/></label>
+              <label class="fld"><span>Relationship (if representative)</span><input name="consent_rel"/></label>
+            </div>
+            <div class="row">
+              <label class="fld"><span>Date</span><input name="consent_date" type="date"/></label>
+              <label class="fld"><span>Consent obtained (digital acknowledgement)</span>
+                <select name="consent_ok"><option value="">— Not yet —</option><option>Yes — consent obtained &amp; recorded</option></select></label>
+            </div>
+          </div>
+        </div>
+      </form>
+      <div class="card audit" id="cs-audit"></div>
+    </section>
+
+    <!-- Admin -->
+    <section id="v-admin" class="view">
+      <div class="card">
+        <h3>Administration &amp; Audit (Professors / HOD)</h3>
+        <p class="muted">Overview of all records and the entry/attribution audit trail. Visible to professor / HOD role only.</p>
+        <div class="row" id="admin-stats"></div>
+      </div>
+      <div class="card">
+        <h4>Recent Activity (Audit Trail)</h4>
+        <table><thead><tr><th>When</th><th>Patient</th><th>Action</th><th>By</th><th>Role</th></tr></thead>
+          <tbody id="audit-body"></tbody></table>
+      </div>
+      <div class="card no-print">
+        <h4>Data Management</h4>
+        <button class="btn sec sm" onclick="exportData()">⬇ Export all records (JSON backup)</button>
+        <button class="btn ghost sm" onclick="document.getElementById('imp').click()">⬆ Import backup</button>
+        <input id="imp" type="file" accept="application/json" class="hide" onchange="importData(event)"/>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ============================================================
+   Navodaya Dental College & Hospital — Digital Case Record
+   Functional prototype. Data persists locally (IndexedDB).
+   Matches the paper case sheet + proposal requirements.
+   ============================================================ */
+
+/* ---------- Demo users (role-based access) ---------- */
+const USERS = [
+  {u:'umer',      p:'demo', name:'Umer',            role:'student',   dept:'Prosthodontia'},
+  {u:'sahasra',   p:'demo', name:'Dr. Sahasra',     role:'intern',    dept:'Prosthodontia'},
+  {u:'omr.doc',   p:'demo', name:'Dr. OMR',         role:'doctor',    dept:'Oral Medicine & Radiology'},
+  {u:'vajendra',  p:'demo', name:'Dr. Vajendra Joshi', role:'professor', dept:'Oral Medicine & Radiology'},
+];
+const ROLE_LABEL={student:'Student',intern:'Intern',doctor:'Doctor / Staff',professor:'Professor / HOD'};
+
+const DEPARTMENTS=['Oral Medicine & Radiology','Oral Surgery','Pedodontia','Conservative Dentistry','Prosthodontia',
+  'Periodontia','Oral Pathology','Orthodontia','Public Health Dentistry'];
+
+const MED_HX=['Allergy','Rheumatic Fever','Heart Disease','Diabetes Mellitus','Hypertension','Bleeding Diathesis',
+  'Exanthematous Fever','Epileptic Seizures','Drugs & Medications','Asthma / Respiratory'];
+
+/* FDI tooth numbering — permanent then primary */
+const PERM_UPPER=[18,17,16,15,14,13,12,11, 21,22,23,24,25,26,27,28];
+const PERM_LOWER=[48,47,46,45,44,43,42,41, 31,32,33,34,35,36,37,38];
+const PRIM_UPPER=[55,54,53,52,51, 61,62,63,64,65];
+const PRIM_LOWER=[85,84,83,82,81, 71,72,73,74,75];
+
+const TOOTH_STATES=[
+  {k:'',   label:'Sound',     color:'#ffffff'},
+  {k:'C',  label:'Caries',    color:'#ffd7a8'},
+  {k:'F',  label:'Filled/Restored', color:'#bcd7ff'},
+  {k:'M',  label:'Missing',   color:'#d6d6d6'},
+  {k:'R',  label:'RCT',       color:'#ffe08a'},
+  {k:'Cr', label:'Crown/Prosthesis', color:'#c9b6f0'},
+  {k:'Fr', label:'Fractured', color:'#f6b0a8'},
+  {k:'Mo', label:'Mobile',    color:'#a8ead0'},
+  {k:'D',  label:'Decayed/Indicated for extraction', color:'#f28b82'},
+];
+
+let session=null;
+let db=null;
+let current=null;   // case object being edited
+
+/* ---------- IndexedDB tiny wrapper ---------- */
+function openDB(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open('navodaya_dental',1);
+    r.onupgradeneeded=e=>{const d=e.target.result;
+      if(!d.objectStoreNames.contains('cases')) d.createObjectStore('cases',{keyPath:'id'});
+      if(!d.objectStoreNames.contains('audit')) d.createObjectStore('audit',{keyPath:'id',autoIncrement:true});
+    };
+    r.onsuccess=e=>res(e.target.result);
+    r.onerror=e=>rej(e);
+  });
+}
+function tx(store,mode){return db.transaction(store,mode).objectStore(store);}
+function dbAll(store){return new Promise(res=>{const out=[];tx(store,'readonly').openCursor().onsuccess=e=>{const c=e.target.result;if(c){out.push(c.value);c.continue();}else res(out);};});}
+function dbPut(store,val){return new Promise(res=>{tx(store,'readwrite').put(val).onsuccess=()=>res();});}
+function dbDel(store,key){return new Promise(res=>{tx(store,'readwrite').delete(key).onsuccess=()=>res();});}
+
+/* ---------- Auth ---------- */
+function renderDemoList(){
+  document.getElementById('demo-list').innerHTML=USERS.map(u=>
+    `<button onclick="quick('${u.u}')"><span><b>${u.name}</b> <span class="muted">(${u.u})</span></span>
+      <span class="pill tag-${u.role}">${ROLE_LABEL[u.role]}</span></button>`).join('');
+}
+function quick(u){document.getElementById('lg-user').value=u;document.getElementById('lg-pass').value='demo';doLogin();}
+function doLogin(){
+  const u=document.getElementById('lg-user').value.trim().toLowerCase();
+  const p=document.getElementById('lg-pass').value;
+  const found=USERS.find(x=>x.u===u&&x.p===p);
+  if(!found){document.getElementById('lg-err').textContent='Invalid username or password.';return;}
+  session=found; localStorage.setItem('nd_session',u);
+  startApp();
+}
+function logout(){session=null;localStorage.removeItem('nd_session');location.reload();}
+
+async function startApp(){
+  document.getElementById('login').classList.add('hide');
+  document.getElementById('app').classList.remove('hide');
+  document.getElementById('who-name').textContent=session.name;
+  const rp=document.getElementById('who-role');rp.textContent=ROLE_LABEL[session.role];rp.className='pill tag-'+session.role;
+  if(session.role==='professor'){document.getElementById('nav-admin').classList.remove('hide');}
+  buildStaticUI();
+  await renderPatients();
+  nav('patients');
+}
+
+/* ---------- Navigation ---------- */
+function nav(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('v-'+v).classList.add('active');
+  document.querySelectorAll('header nav button[data-nav]').forEach(b=>b.classList.toggle('active',b.dataset.nav===v));
+  if(v==='patients')renderPatients();
+  if(v==='admin')renderAdmin();
+}
+
+/* ---------- Build static UI (tabs, checklists, odontogram) ---------- */
+const TABS=[['reg','1. Registration'],['hist','2. History'],['exam','3. Examination'],
+  ['dx','4. Diagnosis & Plan'],['tx','5. Treatment Notes'],['consent','6. Consent']];
+function buildStaticUI(){
+  document.getElementById('cs-tabs').innerHTML=TABS.map((t,i)=>
+    `<button type="button" class="${i===0?'active':''}" data-tab="${t[0]}" onclick="showTab('${t[0]}')">${t[1]}</button>`).join('');
+  document.getElementById('medhx').innerHTML=MED_HX.map(m=>
+    `<label class="chk"><input type="checkbox" data-med="${m}"/> ${m}</label>`).join('');
+  document.getElementById('refer').innerHTML=DEPARTMENTS.map(d=>
+    `<label class="chk"><input type="checkbox" data-ref="${d}"/> ${d}</label>`).join('');
+  document.getElementById('nv-dept').innerHTML=DEPARTMENTS.map(d=>`<option>${d}</option>`).join('');
+  document.getElementById('odo-legend').innerHTML=TOOTH_STATES.filter(s=>s.k).map(s=>
+    `<span><i style="background:${s.color}"></i>${s.k} = ${s.label}</span>`).join('');
+  buildOdontogram();
+}
+function toothCell(n){
+  return `<div class="tooth"><div class="num">${n}</div>
+    <div class="box" data-tooth="${n}" data-state="" onclick="cycleTooth(${n})" title="Tooth ${n}"></div></div>`;
+}
+function rowHtml(arr,splitAt){
+  let left=arr.slice(0,splitAt).map(toothCell).join('');
+  let right=arr.slice(splitAt).map(toothCell).join('');
+  return `<div class="quad-row">${left}<div class="midline"></div>${right}</div>`;
+}
+function buildOdontogram(){
+  document.getElementById('odo').innerHTML=
+    rowHtml(PERM_UPPER,8)+rowHtml(PERM_LOWER,8)+
+    `<div style="height:8px"></div>`+
+    rowHtml(PRIM_UPPER,5)+rowHtml(PRIM_LOWER,5);
+}
+function cycleTooth(n){
+  const box=document.querySelector(`.box[data-tooth="${n}"]`);
+  const cur=box.dataset.state;
+  let idx=TOOTH_STATES.findIndex(s=>s.k===cur);
+  idx=(idx+1)%TOOTH_STATES.length;
+  const st=TOOTH_STATES[idx];
+  box.dataset.state=st.k; box.textContent=st.k; box.style.background=st.color;
+}
+
+/* ---------- Tabs ---------- */
+function showTab(t){
+  document.querySelectorAll('.cs-tab').forEach(x=>x.classList.toggle('hide',x.dataset.tab!==t));
+  document.querySelectorAll('#cs-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+}
+
+/* ---------- Patients list ---------- */
+async function renderPatients(){
+  const all=(await dbAll('cases')).sort((a,b)=>(b.updated||'').localeCompare(a.updated||''));
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const list=all.filter(c=>!q||[c.d.name,c.d.uhid,c.d.opd,c.d.mobile].some(x=>(x||'').toLowerCase().includes(q)));
+  document.getElementById('pt-count').textContent=`(${list.length})`;
+  document.getElementById('pt-empty').classList.toggle('hide',list.length>0);
+  document.getElementById('pt-body').innerHTML=list.map(c=>`
+    <tr class="clickable" onclick="openCase('${c.id}')">
+      <td><b>${esc(c.d.uhid||'—')}</b><br><span class="muted" style="font-size:11px">${esc(c.d.opd||'')}</span></td>
+      <td>${esc(c.d.name||'—')}</td>
+      <td>${esc(c.d.age||'?')}/${esc((c.d.sex||'?').charAt(0))}</td>
+      <td class="muted">${esc((c.d.cc||'').slice(0,50))}</td>
+      <td class="muted" style="font-size:12px">${fmt(c.updated)}</td>
+      <td><span class="pill ${c.d.consent_ok?'tag-doctor':'tag-student'}">${c.d.consent_ok?'Consent ✓':'Draft'}</span></td>
+    </tr>`).join('');
+}
+
+/* ---------- New / open / save case ---------- */
+function blankCase(){
+  const today=new Date().toISOString().slice(0,10);
+  return {id:'C'+Date.now()+Math.floor(Math.random()*1000), created:nowISO(), updated:nowISO(),
+    createdBy:session.name, createdRole:session.role, teeth:{}, visits:[], med:[], refer:[],
+    d:{date:today}};
+}
+function newPatient(){current=blankCase();loadCaseIntoForm();nav('case');showTab('reg');
+  document.getElementById('cs-title').textContent='New Case Sheet';
+  document.getElementById('cs-sub').textContent='Started by '+session.name+' • '+ROLE_LABEL[session.role];}
+async function openCase(id){
+  const all=await dbAll('cases');current=all.find(c=>c.id===id);
+  if(!current)return;loadCaseIntoForm();nav('case');showTab('reg');
+}
+function loadCaseIntoForm(){
+  const f=document.getElementById('cs-form');f.reset();
+  // simple fields
+  Object.entries(current.d).forEach(([k,v])=>{const el=f.elements[k];if(el)el.value=v;});
+  // medical history
+  document.querySelectorAll('#medhx input').forEach(cb=>cb.checked=(current.med||[]).includes(cb.dataset.med));
+  // referral
+  document.querySelectorAll('#refer input').forEach(cb=>cb.checked=(current.refer||[]).includes(cb.dataset.ref));
+  // teeth
+  document.querySelectorAll('.box[data-tooth]').forEach(box=>{
+    const st=(current.teeth||{})[box.dataset.tooth]||'';
+    const s=TOOTH_STATES.find(x=>x.k===st)||TOOTH_STATES[0];
+    box.dataset.state=s.k;box.textContent=s.k;box.style.background=s.color;
+  });
+  renderVisits();
+  if(current.d.name){
+    document.getElementById('cs-title').textContent=current.d.name+' — Case Sheet';
+    document.getElementById('cs-sub').textContent='UHID '+(current.d.uhid||'—')+' • OPD '+(current.d.opd||'—');
+  }
+  renderAudit();
+}
+function harvestForm(){
+  const f=document.getElementById('cs-form');const d={};
+  Array.from(f.elements).forEach(el=>{if(el.name)d[el.name]=el.value;});
+  current.d={...current.d,...d};
+  current.med=[...document.querySelectorAll('#medhx input:checked')].map(x=>x.dataset.med);
+  current.refer=[...document.querySelectorAll('#refer input:checked')].map(x=>x.dataset.ref);
+  const teeth={};document.querySelectorAll('.box[data-tooth]').forEach(b=>{if(b.dataset.state)teeth[b.dataset.tooth]=b.dataset.state;});
+  current.teeth=teeth;
+}
+async function saveCase(){
+  harvestForm();
+  if(!current.d.name){toast('Patient name is required (Tab 1).');showTab('reg');return;}
+  current.updated=nowISO();current.updatedBy=session.name;current.updatedRole=session.role;
+  await dbPut('cases',current);
+  await audit(current,'Saved record');
+  toast('Record saved ✓');
+  renderAudit();
+}
+function renderAudit(){
+  const el=document.getElementById('cs-audit');if(!current)return;
+  el.innerHTML=`<b>Audit:</b> Created by ${esc(current.createdBy||'—')} (${ROLE_LABEL[current.createdRole]||''}) on ${fmt(current.created)}
+    &nbsp;•&nbsp; Last updated by ${esc(current.updatedBy||current.createdBy||'—')} on ${fmt(current.updated)}
+    &nbsp;•&nbsp; Record ID: ${current.id}`;
+}
+
+/* ---------- Visits / treatment notes ---------- */
+function renderVisits(){
+  const v=current.visits||[];
+  document.getElementById('visits').innerHTML=v.length?v.map(x=>`
+    <div class="visit"><b>${esc(x.dept)}</b> — ${esc(x.date)}
+      <div style="margin-top:5px;white-space:pre-wrap">${esc(x.notes)}</div>
+      <div class="meta">Signed by ${esc(x.by)} (${ROLE_LABEL[x.role]||x.role}) • ${fmt(x.ts)}</div></div>`).join('')
+    :'<p class="muted">No treatment notes yet.</p>';
+}
+function addVisit(){
+  const dept=document.getElementById('nv-dept').value;
+  const date=document.getElementById('nv-date').value||new Date().toISOString().slice(0,10);
+  const notes=document.getElementById('nv-notes').value.trim();
+  if(!notes){toast('Enter treatment notes first.');return;}
+  current.visits=current.visits||[];
+  current.visits.push({dept,date,notes,by:session.name,role:session.role,ts:nowISO()});
+  document.getElementById('nv-notes').value='';
+  renderVisits();toast('Treatment note added (auto-signed).');
+}
+
+/* ---------- Admin / audit ---------- */
+async function audit(c,action){await dbPut('audit',{ts:nowISO(),patient:c.d.name||c.id,action,by:session.name,role:session.role});}
+async function renderAdmin(){
+  const cases=await dbAll('cases');const logs=(await dbAll('audit')).sort((a,b)=>(b.ts||'').localeCompare(a.ts||'')).slice(0,50);
+  const withConsent=cases.filter(c=>c.d.consent_ok).length;
+  const refs=cases.reduce((s,c)=>s+(c.refer||[]).length,0);
+  document.getElementById('admin-stats').innerHTML=`
+    ${stat(cases.length,'Total Records')}${stat(withConsent,'Consent Recorded')}
+    ${stat(refs,'Referrals Made')}${stat(logs.length,'Recent Actions')}`;
+  document.getElementById('audit-body').innerHTML=logs.map(l=>`
+    <tr><td class="muted" style="font-size:12px">${fmt(l.ts)}</td><td>${esc(l.patient)}</td>
+    <td>${esc(l.action)}</td><td>${esc(l.by)}</td><td><span class="pill tag-${l.role}">${ROLE_LABEL[l.role]||l.role}</span></td></tr>`).join('')
+    ||'<tr><td colspan="5" class="muted" style="text-align:center;padding:20px">No activity yet.</td></tr>';
+}
+function stat(n,l){return `<div class="card" style="text-align:center;margin:0">
+  <div style="font-size:30px;font-weight:800;color:var(--brand)">${n}</div><div class="muted">${l}</div></div>`;}
+
+/* ---------- Export / import ---------- */
+async function exportData(){
+  const data={cases:await dbAll('cases'),audit:await dbAll('audit'),exported:nowISO()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='navodaya_dental_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+async function importData(ev){
+  const file=ev.target.files[0];if(!file)return;
+  const data=JSON.parse(await file.text());
+  for(const c of (data.cases||[]))await dbPut('cases',c);
+  toast('Imported '+(data.cases||[]).length+' records.');renderPatients();renderAdmin();
+}
+
+/* ---------- helpers ---------- */
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function nowISO(){return new Date().toISOString();}
+function fmt(iso){if(!iso)return '—';const d=new Date(iso);return d.toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ---------- boot ---------- */
+(async function(){
+  renderDemoList();
+  try{db=await openDB();}catch(e){console.error(e);}
+  const saved=localStorage.getItem('nd_session');
+  if(saved){const u=USERS.find(x=>x.u===saved);if(u){session=u;startApp();}}
+  // register service worker for installable app (ignored when opened as file://)
+  if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  }
+})();
+</script>
+</body>
+</html>
