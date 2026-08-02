@@ -92,7 +92,20 @@
   .toast.show{opacity:1}
   .bilingual{background:var(--brand-l);border:1px solid #bfe0da;border-radius:9px;padding:14px;font-size:13px}
   .audit{font-size:11.5px;color:var(--muted);background:#fafbfc;border:1px dashed var(--line);border-radius:8px;padding:10px;margin-top:8px}
-  @media print{
+  /* logos */
+  header.top .logo-img{height:38px;width:auto;background:#fff;border-radius:8px;padding:3px 5px}
+  #login .logo-img{height:58px;width:auto;margin-bottom:10px}
+  .print-only{display:none}
+  /* voice input (mic) */
+  .mic-field{position:relative;display:block}
+  .mic-btn{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:6px;border:1px solid var(--line);background:#fff;padding:0;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;color:var(--muted);z-index:2}
+  .mic-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-l)}
+  .mic-btn.rec{background:var(--danger);color:#fff;border-color:var(--danger);animation:micpulse 1s infinite}
+  @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.5)}50%{box-shadow:0 0 0 6px rgba(192,57,43,0)}}
+  .mic-lang{width:auto;padding:5px 6px;border-radius:7px;font-size:12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35)}
+  .mic-lang option{color:#000}
+  .mic-banner{background:#fff8e6;border:1px solid #f0d48a;color:#7a5c00;border-radius:8px;padding:8px 12px;font-size:12.5px;margin-bottom:12px}
+  @media print{.print-only{display:block!important}.mic-btn{display:none!important}
     header.top,.tabs,.no-print{display:none!important}
     main{margin:0;max-width:100%}
     .card{box-shadow:none;border:none;page-break-inside:avoid}
@@ -105,7 +118,7 @@
 <!-- ============ LOGIN ============ -->
 <div id="login">
   <div class="box">
-    <div class="logo">N</div>
+    <img src="logo.png" class="logo-img" alt="Navodaya Dental College & Hospital"/>
     <h2 style="margin-bottom:2px">Digital Case Record</h2>
     <p class="muted" style="margin-top:0">Navodaya Dental College &amp; Hospital, Raichur</p>
     <label class="fld"><span>Username</span><input id="lg-user" placeholder="e.g. umer" autocomplete="username"/></label>
@@ -122,7 +135,7 @@
 <!-- ============ APP ============ -->
 <div id="app" class="hide">
   <header class="top">
-    <div class="logo">N</div>
+    <img src="mark.png" class="logo-img" alt="logo"/>
     <div>
       <h1>Navodaya Dental College &amp; Hospital</h1>
       <div class="sub">Digital Patient Case Record System</div>
@@ -131,6 +144,8 @@
       <button data-nav="patients" class="active" onclick="nav('patients')">Patients</button>
       <button data-nav="new" onclick="newPatient()">+ New Patient</button>
       <button data-nav="admin" id="nav-admin" class="hide" onclick="nav('admin')">Admin</button>
+      <select class="mic-lang" id="mic-lang" title="Voice input language" onchange="micLang=this.value">
+        <option value="en-IN">🎤 English</option><option value="kn-IN">🎤 ಕನ್ನಡ</option><option value="hi-IN">🎤 हिन्दी</option></select>
       <span class="whoami"><span id="who-name"></span><span id="who-role" class="pill"></span>
         <button class="btn ghost sm" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="logout()">Logout</button></span>
     </nav>
@@ -158,6 +173,11 @@
 
     <!-- Case sheet editor -->
     <section id="v-case" class="view">
+      <div class="print-only" style="text-align:center;border-bottom:2px solid #084f45;padding-bottom:8px;margin-bottom:12px">
+        <img src="logo.png" style="height:56px"/>
+        <div style="font-weight:700;font-size:13px;margin-top:4px">Navodaya Dental College &amp; Hospital, Raichur — Case History</div>
+      </div>
+      <div id="mic-banner" class="mic-banner no-print hide">🎤 Voice input is available — click the mic in any field to dictate. (Requires Chrome or Edge, and microphone permission.)</div>
       <div class="card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <button class="btn ghost sm no-print" onclick="nav('patients')">&larr; Back</button>
         <div style="flex:1">
@@ -452,6 +472,9 @@ async function startApp(){
   const rp=document.getElementById('who-role');rp.textContent=ROLE_LABEL[session.role];rp.className='pill tag-'+session.role;
   if(session.role==='professor'){document.getElementById('nav-admin').classList.remove('hide');}
   buildStaticUI();
+  attachMics(document.getElementById('app'));
+  document.getElementById('mic-banner').classList.toggle('hide', !MIC_OK);
+  if(!MIC_OK){ document.getElementById('mic-lang').classList.add('hide'); }
   await renderPatients();
   nav('patients');
 }
@@ -644,6 +667,58 @@ function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;'
 function nowISO(){return new Date().toISOString();}
 function fmt(iso){if(!iso)return '—';const d=new Date(iso);return d.toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ---------- Voice input (Web Speech API) ---------- */
+let micLang='en-IN';
+let recog=null, micTarget=null, micActiveBtn=null;
+const MIC_OK = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
+function makeRecognizer(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const r=new SR();
+  r.continuous=true; r.interimResults=true; r.lang=micLang; r.maxAlternatives=1;
+  r.onresult=e=>{
+    let finalTxt='';
+    for(let i=e.resultIndex;i<e.results.length;i++){ if(e.results[i].isFinal) finalTxt+=e.results[i][0].transcript; }
+    if(finalTxt && micTarget) insertDictation(micTarget, finalTxt);
+  };
+  r.onerror=e=>{ if(e.error==='not-allowed'||e.error==='service-not-allowed') toast('Microphone permission denied.'); else if(e.error!=='no-speech') toast('Voice input error: '+e.error); stopMic(); };
+  r.onend=()=>stopMic();
+  return r;
+}
+function insertDictation(el, text){
+  text=text.trim(); if(!text) return;
+  if(el.type==='number'){ const n=text.replace(/[^\d.]/g,''); if(n) el.value=n; }
+  else { const cur=el.value||''; const sep=cur && !/\s$/.test(cur) ? ' ' : ''; el.value=cur+sep+text; }
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+}
+function startMic(el, btn){
+  if(!MIC_OK){ toast('Voice input needs Chrome or Edge browser.'); return; }
+  if(micActiveBtn) stopMic();
+  recog=makeRecognizer(); recog.lang=micLang; micTarget=el; micActiveBtn=btn;
+  btn.classList.add('rec'); btn.title='Listening… click to stop';
+  el.focus();
+  try{ recog.start(); toast('🎤 Listening… speak now'); }catch(e){ stopMic(); }
+}
+function stopMic(){
+  if(micActiveBtn){ micActiveBtn.classList.remove('rec'); micActiveBtn.title='Dictate (voice input)'; }
+  micActiveBtn=null; micTarget=null;
+  if(recog){ try{recog.stop();}catch(e){} recog=null; }
+}
+function toggleMic(el, btn){ if(micActiveBtn===btn) stopMic(); else startMic(el, btn); }
+function attachMics(root){
+  const sel='input[type=text],input:not([type]),input[type=tel],input[type=search],input[type=number],textarea';
+  root.querySelectorAll(sel).forEach(el=>{
+    if(el.dataset.mic || el.readOnly || el.disabled) return;
+    el.dataset.mic='1';
+    const holder=document.createElement('span'); holder.className='mic-field';
+    el.parentNode.insertBefore(holder, el); holder.appendChild(el);
+    el.style.paddingRight='36px';
+    const btn=document.createElement('button');
+    btn.type='button'; btn.className='mic-btn'; btn.textContent='🎤'; btn.title='Dictate (voice input)';
+    btn.addEventListener('click',()=>toggleMic(el, btn));
+    holder.appendChild(btn);
+  });
+}
 
 /* ---------- boot ---------- */
 (async function(){
